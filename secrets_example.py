@@ -1,9 +1,33 @@
+"""here be secrets"""
 # =============================================================================
 # Adafruit MacroPad RP2040 - TOTP secrets
 # =============================================================================
 # These are base32 encoded seeds from your 2FA providers
 # Populate this list by replacing "YOUR_BASE32_SEED_HERE" with your actual seed.
 # Rename this file to "secrets.py" and fill in your actual values
+from adafruit_macropad import MacroPad
+
+macropad = MacroPad()
+
+def update_key_leds(page_name="page_0"):
+    key_idx = 0
+    for row in layout[page_name]:
+        for service_key in row:
+            if is_service_defined(service_key):
+                color = secrets[service_key]["color"]
+                brightness = secrets[service_key]["brightness"] / 100.0 #scale 0-100 to 0.0-1.0
+
+                # Scale RGB color by brightness factor
+                scaled_color = (
+                    int(color[0] * brightness),
+                    int(color[1] * brightness),
+                    int(color[2] * brightness)
+                )
+                macropad.pixels[key_idx] = scaled_color
+            else:
+                macropad.pixels[key_idx] = (0, 0, 0) # Turns off LED for undefined services on that page.
+
+            key_idx += 1
 
 secrets = {
     "svc_0": {
@@ -61,4 +85,5 @@ layout = {
         ["svc_6", "svc_7", "svc_8"],       # Mid-Bottom Row 2 (Keys 6, 7, 8)
         ["svc_9", "svc_10", "svc_11"],     # Bottom Row 3 (Keys 9, 10, 11)
     ],
-}
+} 
+# End-of-file (EOF)
