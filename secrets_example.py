@@ -53,11 +53,12 @@ secrets = {
     # },
 }
 
-# Physical key layout (Page 0)
+# Physical key layout (Page 0) - 4 rows x 3 columns
 layout = {
     "page_0": [
-        ["svc_0", "svc_1", "svc_2", "svc_3"],       # Row 0 (top)
-        ["svc_4", "svc_5", "svc_6", "svc_7"],       # Row 1 (middle)
-        ["svc_8", "svc_9", "svc_10", "svc_11"],     # Row 2 (bottom)
+        ["svc_0", "svc_1", "svc_2"],       # Top Row 0 (Keys 0, 1, 2)
+        ["svc_3", "svc_4", "svc_5"],       # Mid-Top Row 1 (Keys 3, 4, 5)
+        ["svc_6", "svc_7", "svc_8"],       # Mid-Bottom Row 2 (Keys 6, 7, 8)
+        ["svc_9", "svc_10", "svc_11"],     # Bottom Row 3 (Keys 9, 10, 11)
     ],
 }

@@ -1,0 +1,6 @@
+{
+    "python.analysis.addExtraPathsForPythonProjects": true,
+    "python.analysis.extraPaths": [
+        "C:\\Users\\jasoncallahan\\Documents\\Coding Libraries\\adafruit-circuitpython-bundle-10.x-mpy-20260725\\lib"
+    ]
+}
