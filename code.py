@@ -19,6 +19,7 @@ STATE_WAIT_SYNC = 1
 STATE_UNLOCKED = 2
 
 current_state = STATE_LOCKED
+selected_service_key = None
 
 failed_attempts = 0
 lockout_until = 0
@@ -184,7 +185,7 @@ def base32_decode(encoded_str):
     for char in cleaner:
         if char not in ALPHABET:
             continue
-        val = ALPHABET.index(CHAR)
+        val = ALPHABET.index(char)
         buffer = (buffer << 5) | val
         bits_in_buffer += 5
         if bits_in_buffer >= 8:
@@ -196,14 +197,14 @@ def base32_decode(encoded_str):
 def generate_totp(secret_seed):
     """Generates a live TOTP code based on the provided Base32 seed."""
     try:  # Decode the Base32 seed
-        key = base32_decode(secret_seed):
+        key = base32_decode(secret_seed)
         current_epoch= int(time.mktime(r.datetime))
         time_block = current_epoch // 30 # Gets the 30s live code block
         msg = struct.pack(">Q", time_block) # Pack time into 8 big bytes
-        digest = hmac,new(key, msg, hashlib.sha1).digest() # Imbue with crypto magic
+        digest = hmac.new(key, msg, hashlib.sha1).digest() # Imbue with crypto magic
         offset = digest[-1] & 0x0F # Truncate that hoe
         code_bytes = digest[offset:offset + 4]
-        code_num = struct.unpack(">1", code_bytes)[0] & 0x7FFFFFFF
+        code_num = struct.unpack(">I", code_bytes)[0] & 0x7FFFFFFF
 
         return f"{code_num % 1000000:06d}"
     except Exception as e:
@@ -218,7 +219,7 @@ def active_totp_code():
 
     if selected_service_key in secrets:
         seed = secrets[selected_service_key].get("seed", "")
-        return generated_totp(seed)
+        return generate_totp(seed)
     return "N/A"
 
         
@@ -269,7 +270,7 @@ while True:
             elif current_state == STATE_UNLOCKED:
                 # Keypress selects active service
                 svc_id= f"svc_{key_event.key_number}"
-                if is_service_key = svc_id
+                if is_service_defined(svc_id):
                     selected_service_key = svc_id
                     svc_name = secrets[svc_id]["display_name"].upper()
                     code = active_totp_code()
@@ -278,7 +279,7 @@ while True:
                     macropad.display_text[1].text = f"CODE: {code}"
                 else:
                     macropad.display_text[0].text = "EMPTY SLOT"
-                    macropad.display_text[0].text = ""    
+                    macropad.display_text[1].text = ""    
 
         elif key_event.released:
             keys_held.discard(key_event.key_number)
