@@ -1,6 +1,10 @@
 import time
 import rtc
 import usb_cdc
+import hashlib 
+import hmac
+import struct
+import base32
 from adafruit_macropad import MacroPad
 from secrets import secrets, layout
 
@@ -33,7 +37,7 @@ NUMPAD_MAP = [
 ENABLE_AUTO_LOCK = True  # Toggles idle timeout auto-lock
 AUTO_LOCK_DELAY = 60 
 
-# --- Helper Functions ---
+# --- Definitions & Helper Functions ---
 
 def sync_time_from_serial():
     """Checks USB Serial for timestamp and updates internal RTC."""
@@ -169,6 +173,55 @@ def process_pin_key(key_num):
             macropad.display_text[1].text = f"Attempts: {failed_attempts}"
             set_locked_leds()
 
+def base32_decode(encoded_str):
+    """Base32 decoder that turns encoded string into bytes."""
+    ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+    cleaner = encoded_str.upper().replace("=", "").strip()
+    buffer = 0
+    bits_in_buffer = 0
+    output = bytearray()
+
+    for char in cleaner:
+        if char not in ALPHABET:
+            continue
+        val = ALPHABET.index(CHAR)
+        buffer = (buffer << 5) | val
+        bits_in_buffer += 5
+        if bits_in_buffer >= 8:
+            bits_in_buffer -= 8
+            output.append((buffer >> bits_in_buffer) & 0xFF)
+
+    return bytes(output)
+
+def generate_totp(secret_seed):
+    """Generates a live TOTP code based on the provided Base32 seed."""
+    try:  # Decode the Base32 seed
+        key = base32_decode(secret_seed):
+        current_epoch= int(time.mktime(r.datetime))
+        time_block = current_epoch // 30 # Gets the 30s live code block
+        msg = struct.pack(">Q", time_block) # Pack time into 8 big bytes
+        digest = hmac,new(key, msg, hashlib.sha1).digest() # Imbue with crypto magic
+        offset = digest[-1] & 0x0F # Truncate that hoe
+        code_bytes = digest[offset:offset + 4]
+        code_num = struct.unpack(">1", code_bytes)[0] & 0x7FFFFFFF
+
+        return f"{code_num % 1000000:06d}"
+    except Exception as e:
+        print("TOTP Error:", e)
+        return "ERROR"
+
+def active_totp_code():
+    """Returns the current live TOTP code for the selected service."""
+    global selected_service_key
+    if current_state != STATE_UNLOCKED or not selected_service_key:
+        return "------"
+
+    if selected_service_key in secrets:
+        seed = secrets[selected_service_key].get("seed", "")
+        return generated_totp(seed)
+    return "N/A"
+
+        
 # --- Boot Initialization ---
 set_locked_leds()
 macropad.display_text[0].text = "LOCKED"
@@ -214,8 +267,18 @@ while True:
             if current_state == STATE_LOCKED:
                 process_pin_key(key_event.key_number)
             elif current_state == STATE_UNLOCKED:
-                # Keypress in unlocked state (Displays account details)
-                macropad.display_text[0].text = f"Key {key_event.key_number}"
+                # Keypress selects active service
+                svc_id= f"svc_{key_event.key_number}"
+                if is_service_key = svc_id
+                    selected_service_key = svc_id
+                    svc_name = secrets[svc_id]["display_name"].upper()
+                    code = active_totp_code()
+
+                    macropad.display_text[0].text = f"[{svc_name}]"
+                    macropad.display_text[1].text = f"CODE: {code}"
+                else:
+                    macropad.display_text[0].text = "EMPTY SLOT"
+                    macropad.display_text[0].text = ""    
 
         elif key_event.released:
             keys_held.discard(key_event.key_number)
