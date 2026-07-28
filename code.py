@@ -161,13 +161,13 @@ def process_pin_key(key_num):
             access_denied_flash()
             user_pin = ""
 
-            if lockout_secs > 0:
-                macropad.display_text[0].text = "LOCKED OUT"
-                macropad.display_text[1].text = f"WAIT {lockout_secs // 60}m"
-            else:
-                macropad.display_text[0].text = "WRONG PIN"
-                macropad.display_text[1].text = f"Attempts: {failed_attempts}"
-                set_locked_leds()
+        if lockout_secs > 0:
+            macropad.display_text[0].text = "LOCKED OUT"
+            macropad.display_text[1].text = f"WAIT  {lockout_secs // 60}m"
+        else:
+            macropad.display_text[0].text = "WRONG PIN"
+            macropad.display_text[1].text = f"Attempts: {failed_attempts}"
+            set_locked_leds()
 
 # --- Boot Initialization ---
 set_locked_leds()
